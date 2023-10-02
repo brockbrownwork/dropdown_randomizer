@@ -1,93 +1,25 @@
-import { getActiveTabURL } from "./utils.js";
+// Function to select a random option from a dropdown menu, excluding the first option
+function selectRandomOption(selectElement) {
+  // Get the total number of options
+  let numOptions = selectElement.options.length;
 
-const addNewBookmark = (bookmarks, bookmark) => {
-  const bookmarkTitleElement = document.createElement("div");
-  const controlsElement = document.createElement("div");
-  const newBookmarkElement = document.createElement("div");
-
-  bookmarkTitleElement.textContent = bookmark.desc;
-  bookmarkTitleElement.className = "bookmark-title";
-  controlsElement.className = "bookmark-controls";
-
-  setBookmarkAttributes("play", onPlay, controlsElement);
-  setBookmarkAttributes("delete", onDelete, controlsElement);
-
-  newBookmarkElement.id = "bookmark-" + bookmark.time;
-  newBookmarkElement.className = "bookmark";
-  newBookmarkElement.setAttribute("timestamp", bookmark.time);
-
-  newBookmarkElement.appendChild(bookmarkTitleElement);
-  newBookmarkElement.appendChild(controlsElement);
-  bookmarks.appendChild(newBookmarkElement);
-};
-
-const viewBookmarks = (currentBookmarks=[]) => {
-  const bookmarksElement = document.getElementById("bookmarks");
-  bookmarksElement.innerHTML = "";
-
-  if (currentBookmarks.length > 0) {
-    for (let i = 0; i < currentBookmarks.length; i++) {
-      const bookmark = currentBookmarks[i];
-      addNewBookmark(bookmarksElement, bookmark);
-    }
-  } else {
-    bookmarksElement.innerHTML = '<i class="row">No bookmarks to show</i>';
+  // If there are two or more options, proceed to select a random one excluding the first option
+  if (numOptions >= 2) {
+    // Generate a random index from 1 to numOptions - 1 (inclusive)
+    let randomIndex = Math.floor(Math.random() * (numOptions - 1)) + 1;
+    // Select the random option
+    selectElement.selectedIndex = randomIndex;
   }
+}
 
-  return;
-};
+// Get all the dropdown menus on the page
+let selects = document.querySelectorAll('select');
 
-const onPlay = async e => {
-  const bookmarkTime = e.target.parentNode.parentNode.getAttribute("timestamp");
-  const activeTab = await getActiveTabURL();
-
-  chrome.tabs.sendMessage(activeTab.id, {
-    type: "PLAY",
-    value: bookmarkTime,
-  });
-};
-
-const onDelete = async e => {
-  const activeTab = await getActiveTabURL();
-  const bookmarkTime = e.target.parentNode.parentNode.getAttribute("timestamp");
-  const bookmarkElementToDelete = document.getElementById(
-    "bookmark-" + bookmarkTime
-  );
-
-  bookmarkElementToDelete.parentNode.removeChild(bookmarkElementToDelete);
-
-  chrome.tabs.sendMessage(activeTab.id, {
-    type: "DELETE",
-    value: bookmarkTime,
-  }, viewBookmarks);
-};
-
-const setBookmarkAttributes =  (src, eventListener, controlParentElement) => {
-  const controlElement = document.createElement("img");
-
-  controlElement.src = "assets/" + src + ".png";
-  controlElement.title = src;
-  controlElement.addEventListener("click", eventListener);
-  controlParentElement.appendChild(controlElement);
-};
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const activeTab = await getActiveTabURL();
-  const queryParameters = activeTab.url.split("?")[1];
-  const urlParameters = new URLSearchParams(queryParameters);
-
-  const currentVideo = urlParameters.get("v");
-
-  if (activeTab.url.includes("youtube.com/watch") && currentVideo) {
-    chrome.storage.sync.get([currentVideo], (data) => {
-      const currentVideoBookmarks = data[currentVideo] ? JSON.parse(data[currentVideo]) : [];
-
-      viewBookmarks(currentVideoBookmarks);
-    });
-  } else {
-    const container = document.getElementsByClassName("container")[0];
-
-    container.innerHTML = '<div class="title">This is not a youtube video page.</div>';
+// Iterate through each dropdown menu and select a random option
+selects.forEach(select => {
+  // If the name of the dropdown is not 'lang', proceed to select a random option
+  if (select.name !== 'lang') {
+    selectRandomOption(select);
   }
 });
 
